@@ -8,7 +8,7 @@ from datetime import datetime
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from Phase1.scraper import fetch_reviews, save_reviews
-from Phase2.analyzer import GeminiAnalyzer
+from Phase2.analyzer import get_analyzer
 from Phase4.email_generator import generate_html_email
 from Phase4.mailer import send_pulse_email
 import pandas as pd
@@ -26,7 +26,7 @@ def run_weekly_pulse():
 
         # Phase 2: Analyze
         print("[2/4] Analyzing with AI...")
-        analyzer = GeminiAnalyzer()
+        analyzer = get_analyzer()
         report = analyzer.analyze_reviews(reviews)
 
         report_path = os.path.join(os.path.dirname(__file__), '..', 'Phase2', 'pulse_report.json')

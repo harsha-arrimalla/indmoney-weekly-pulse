@@ -5,7 +5,7 @@ import sys
 import pandas as pd
 from datetime import datetime
 from Phase1.scraper import fetch_reviews, save_reviews
-from Phase2.analyzer import GeminiAnalyzer
+from Phase2.analyzer import get_analyzer
 from Phase4.email_generator import generate_html_email
 from Phase4.mailer import send_pulse_email
 from dotenv import load_dotenv
@@ -160,8 +160,10 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
-    app_id = st.sidebar.text_input("App ID", value="in.indwealth")
-    weeks = st.sidebar.slider("Weeks to analyze", 1, 12, 12)
+    st.sidebar.markdown('<p style="color: #0F172A; font-weight: 600; margin-bottom: 0;">Play Store App ID</p>', unsafe_allow_html=True)
+    app_id = st.sidebar.text_input("App ID", value="in.indwealth", label_visibility="collapsed")
+    st.sidebar.markdown('<p style="color: #0F172A; font-weight: 600; margin-bottom: 0;">Review Period (weeks)</p>', unsafe_allow_html=True)
+    weeks = st.sidebar.slider("Weeks to analyze", 1, 12, 12, label_visibility="collapsed", help="How many weeks of reviews to fetch and analyze")
 
     # Debug Info (Small)
     st.sidebar.markdown(f"""
@@ -176,11 +178,13 @@ def main():
     st.markdown("<p style='color: #64748B; margin-top: -10px; font-size: 1.1em;'>High-impact insights from user feedback.</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-    # Check for API Key (Secrets compatible)
-    api_key = get_secret("GOOGLE_API_KEY") or get_secret("GEMINI_API_KEY")
+    # Check for API Keys (Secrets compatible)
+    groq_key = get_secret("GROQ_API_KEY")
+    gemini_key = get_secret("GOOGLE_API_KEY") or get_secret("GEMINI_API_KEY")
+    has_api_key = groq_key or gemini_key
 
-    if not api_key:
-        st.sidebar.warning("No Gemini API Key found. Set GOOGLE_API_KEY in Streamlit Secrets or .env")
+    if not has_api_key:
+        st.sidebar.warning("No API Key found. Set GROQ_API_KEY or GOOGLE_API_KEY in Streamlit Secrets or .env")
 
     if st.sidebar.button("Sync & Analyze"):
         with st.spinner("Fetching latest reviews..."):
@@ -193,10 +197,11 @@ def main():
             else:
                 st.sidebar.success(f"Fetched {len(reviews_data)} high-quality reviews!")
 
-        if api_key:
-            with st.spinner("Analyzing with Gemini AI..."):
+        if has_api_key:
+            provider = "Groq" if groq_key else "Gemini"
+            with st.spinner(f"Analyzing with {provider} AI..."):
                 try:
-                    analyzer = GeminiAnalyzer(api_key=api_key)
+                    analyzer = get_analyzer(groq_key=groq_key, gemini_key=gemini_key)
                     report = analyzer.analyze_reviews(reviews_data)
 
                     # Save report
@@ -207,9 +212,9 @@ def main():
 
                     st.session_state['report'] = report
                 except Exception as e:
-                    st.error(f"Error analyzing with Gemini AI: {e}")
+                    st.error(f"Error analyzing with {provider} AI: {e}")
         else:
-            st.error("Cannot run AI analysis without Gemini API Key.")
+            st.error("Cannot run AI analysis without an API Key.")
 
         st.session_state['reviews_count'] = len(reviews_data)
         st.session_state['avg_rating'] = pd.DataFrame(reviews_data)['rating'].mean() if reviews_data else 0
