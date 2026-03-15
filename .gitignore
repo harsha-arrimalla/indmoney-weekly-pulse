@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Secrets
+.env
+
+# Data & Reports
+reviews.json
+reviews_report.csv
+Phase2/pulse_report.json
+Phase4/email_draft.html
+
+# IDEs
+.vscode/
+.idea/

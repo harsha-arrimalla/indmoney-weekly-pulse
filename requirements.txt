@@ -1,0 +1,6 @@
+streamlit
+google-play-scraper
+google-generativeai
+python-dotenv
+pandas
+langdetect
