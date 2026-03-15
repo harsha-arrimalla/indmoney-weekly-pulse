@@ -368,23 +368,27 @@ def main():
                         if recipient_email:
                             os.environ["RECIPIENT_EMAIL"] = recipient_email
 
-                        result = send_pulse_email(
-                            st.session_state['last_html_email'],
-                            attachment_path=attachment_path,
-                            preamble="Hi Team, your weekly INDMoney review pulse is ready, highlighting key users' feedback and issues to focus on."
-                        )
+                        try:
+                            result = send_pulse_email(
+                                st.session_state['last_html_email'],
+                                attachment_path=attachment_path,
+                                preamble="Hi Team, your weekly INDMoney review pulse is ready, highlighting key users' feedback and issues to focus on."
+                            )
 
-                        if isinstance(result, tuple):
-                            success, message = result
-                        else:
-                            success = result
-                            message = "Check SMTP settings" if not success else "Success"
+                            if isinstance(result, tuple):
+                                success, message = result
+                            else:
+                                success = result
+                                message = "Check SMTP settings" if not success else "Success"
 
-                        if success:
-                            st.success(f"Pulse sent successfully to {recipient_email}!")
-                        else:
-                            st.error(f"Failed to send email: {message}")
-                            st.info("Ensure you have set up your SMTP secrets correctly.")
+                            if success:
+                                st.success(f"Pulse sent successfully to {recipient_email}!")
+                            else:
+                                st.error(f"Failed to send email: {message}")
+                        except ValueError:
+                            st.error("SMTP not configured. Add SMTP_SERVER, SENDER_EMAIL, SENDER_PASSWORD, and RECIPIENT_EMAIL to your Streamlit Secrets or .env file.")
+                        except Exception as e:
+                            st.error(f"Failed to send email: {e}")
 
 if __name__ == "__main__":
     main()
